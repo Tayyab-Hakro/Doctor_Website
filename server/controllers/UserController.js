@@ -2,8 +2,8 @@ import UserModel from "../models/UserModel.js";
 import bcrypt from "bcryptjs";
 import multer from "multer";
 import path from "path";
+import jwt from 'jsonwebtoken'
 
-// Multer Use for Image Uploader
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "public/images");
@@ -39,12 +39,11 @@ export const SignUp = async (req, res) => {
       username,
       email,
       password: hashedPassword,
-      file: imageUploader.filename, // Save the uploaded file name
+      file: imageUploader.filename, 
       address,
       phone,
     });
 
-    // Save the user to the database
     await newUser.save();
 
     // Respond with success
@@ -60,3 +59,41 @@ export const SignUp = async (req, res) => {
     });
   }
 };
+
+export const Login = async (req , res) =>{
+    try{
+
+    
+    const {email , password} = req.body
+      if ( !email || !password ) {
+        return res.status(400).json({ success: false, message: "Fill all the fields" });
+      }
+  
+      const user = await UserModel.findOne({ email });
+      if (!user) {
+        return res.status(400).json({ success: false, message: "User is not signup yet" });
+      }
+      const isMatch = await bcrypt.compare(password ,user.password)
+      if (!isMatch) return res.status(401).json({ success:false, message: 'Invalid credentials!' });
+      
+
+
+    // Create token data
+    const tokenData = { userID: user._id };
+    const token = await jwt.sign(tokenData , process.env.SECRET_TOKEN_KEY ,{
+        expiresIn:"1d"
+    })
+    res.status(200)
+    .cookie('token', token, {
+      maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+      httpOnly: true, // Prevent access to cookie from client-side JS
+    })
+    .json({
+      success: true,
+      message: `Welcome back ${user.username}`,
+      user
+    });
+    }catch(error){
+        console.log(error)
+    }
+}
