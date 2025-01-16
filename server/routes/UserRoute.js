@@ -1,9 +1,8 @@
-import express from "express"
-import { SignUp } from "../controllers/UserController.js"
-import { upload } from "../controllers/UserController.js"
-const UserRouter = express.Router()
-UserRouter.route('/Signup')
-  .post(upload.single('profileImage'), SignUp);
+import express from "express";
+import { upload, SignUp } from "../controllers/UserController.js";
 
+const router = express.Router();
 
-export default UserRouter
+router.post("/signup", upload.single("file"), SignUp);
+
+export default router;
