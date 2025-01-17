@@ -3,12 +3,13 @@ import dotenv from "dotenv";
 import  dbConnection  from "./MongodbConnection/dbConnect.js";
 import UserRouter from "./routes/UserRoute.js";
 import cors from 'cors'
+import cookieParser from "cookie-parser";
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(express.static('public'));
-
+app.use(cookieParser())
 app.use(express.json());
 dbConnection()
 app.use(cors())

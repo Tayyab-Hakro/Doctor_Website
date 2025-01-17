@@ -1,12 +1,11 @@
 import express from "express";
-import { upload, SignUp, Login } from "../controllers/UserController.js";
-import { isLoggedInUser } from "../auth/UserAuth.js";
+import { upload, SignUp, Login, Logout } from "../controllers/UserController.js";
 
 const router = express.Router();
 
 router.post("/signup", upload.single("file"), SignUp)
 router.post("/login",  Login);
-router.get("/auth" ,isLoggedInUser)
+router.get("/logout" ,Logout)
 ;
 
 export default router;

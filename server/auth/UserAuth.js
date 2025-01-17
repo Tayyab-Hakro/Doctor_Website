@@ -1,14 +1,13 @@
 import jwt from 'jsonwebtoken'
-import UserModel from '../models/UserModel.js'
 
 export const isLoggedInUser = async(req ,res , next)=>{
-const token = req.cookie
+const token = req.headers
 if(!token){
     return res.status(401).json({success : false , message:"User in not logged in"})
 }
 try{
-const decoded = await jwt.verify(token ,process.env.SECRET_TOKEN_KEY)
-const user = await UserModel.findById(decoded.userId);
+    const token_decode = jwt.verify(token,process.env.SECRET_TOKEN);
+    req.body.userId = token_decode.id;
 
  
 if (!user) {
