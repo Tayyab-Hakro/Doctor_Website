@@ -103,46 +103,24 @@ export const Logout = (req, res)=>{
   res.clearCookie("token");
   return res.json("success");
 }
-// Backend Controller (profileController.js)
+
 export const GetProfileData = async (req, res) => {
   try {
-    const Id = req.params.id;
+      const id = req.params.id;
 
-    // Check if the Id is provided
-    if (!Id) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID is required",
-      });
-    }
+      // Check if the id is valid
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+          return res.status(400).json({ error: 'Invalid user ID' });
+      }
 
-    // Check if the Id matches MongoDB ObjectId format (24 characters hex string)
-    if (!mongoose.Types.ObjectId.isValid(Id) || Id.length !== 24) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid MongoDB ObjectId format",
-        details: "User ID must be a 24-character hex string"
-      });
-    }
+      const user = await UserModel.findById(id).select('-password');
+      if (!user) {
+          return res.status(404).json({ error: 'User not found' });
+      }
 
-    const user = await UserModel.findById(Id).select('-password');
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      user,
-    });
+      return res.status(200).json({ user });
   } catch (error) {
-    console.error('Profile fetch error:', error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+      console.error(error);
+      return res.status(500).json({ error: 'Internal server error' });
   }
 };
