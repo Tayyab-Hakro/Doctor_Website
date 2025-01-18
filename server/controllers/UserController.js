@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import multer from "multer";
 import path from "path";
 import jwt from 'jsonwebtoken'
+import mongoose from "mongoose";
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -102,3 +103,46 @@ export const Logout = (req, res)=>{
   res.clearCookie("token");
   return res.json("success");
 }
+// Backend Controller (profileController.js)
+export const GetProfileData = async (req, res) => {
+  try {
+    const Id = req.params.id;
+
+    // Check if the Id is provided
+    if (!Id) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    // Check if the Id matches MongoDB ObjectId format (24 characters hex string)
+    if (!mongoose.Types.ObjectId.isValid(Id) || Id.length !== 24) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid MongoDB ObjectId format",
+        details: "User ID must be a 24-character hex string"
+      });
+    }
+
+    const user = await UserModel.findById(Id).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
