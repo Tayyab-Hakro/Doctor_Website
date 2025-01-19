@@ -5,7 +5,7 @@ export const BookingSystem =async (req , res ) =>{
     const { fullname, email, phone, address, city, postolCode, timeSlots } = req.body;
 
         // Validate required fields
-        if (!fullname || !email || !phone || !address || !city || !postolCode || !timeSlots) {
+        if (!fullname || !email || !phone || !address  || !timeSlots) {
             return res.status(400).json({ success: false, message: "Please fill all required fields." });
         }
 
@@ -25,9 +25,7 @@ export const BookingSystem =async (req , res ) =>{
             email,
             phone,
             address,
-            city,
-            postolCode,
-            timeSlots,
+                       timeSlots,
         });
 
         // Save the booking to the database
