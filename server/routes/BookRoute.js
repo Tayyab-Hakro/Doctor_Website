@@ -1,7 +1,9 @@
 import express from "express"
-import { BookingSystem } from "../controllers/Appointments.js"
+import { BookingSystem, MyAppointments } from "../controllers/Appointments.js"
 const BookRouter = express.Router()
 
 BookRouter.post("/Booking" , BookingSystem)
+BookRouter.get("/Bookingdata" , MyAppointments)
+
 
 export default BookRouter
