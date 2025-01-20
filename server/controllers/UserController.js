@@ -77,43 +77,40 @@ export const Login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate required fields
     if (!email || !password) {
       return res.status(400).json({ success: false, message: "Please fill in all fields." });
     }
 
-    // Check if the user exists
     const user = await UserModel.findOne({ email });
     if (!user) {
       return res.status(400).json({ success: false, message: "User not registered." });
     }
 
-    // Validate password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: "Invalid credentials." });
     }
 
-    // Check for secret token key
     if (!process.env.SECRET_TOKEN_KEY) {
-      throw new Error("Missing SECRET_TOKEN_KEY in environment variables.");
+      console.error("Missing SECRET_TOKEN_KEY in environment variables.");
+      return res.status(500).json({ success: false, message: "Server configuration error." });
     }
 
-    // Generate JWT token
     const tokenData = { userID: user._id };
     const token = jwt.sign(tokenData, process.env.SECRET_TOKEN_KEY, { expiresIn: "1d" });
 
     res
       .status(200)
       .cookie("token", token, {
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
-        httpOnly: true, // Prevent client-side access
-        secure: process.env.NODE_ENV === "production", // Secure in production
+        maxAge: 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
       })
       .json({
         success: true,
         message: `Welcome back, ${user.username}!`,
         user: { id: user._id, username: user.username, email: user.email },
+        token, // Include the token in the response for testing
       });
   } catch (error) {
     console.error("Login error:", error);
@@ -121,19 +118,25 @@ export const Login = async (req, res) => {
   }
 };
 
+// Get profile data
+export const GetProfileData = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const user = await UserModel.findById({ _id: id });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error("Error fetching user profile:", err);
+    res.status(500).json({ success: false, message: "Server error." });
+  }
+};
+
+
 // User logout
 export const Logout = (req, res) => {
   res.clearCookie("token");
   return res.status(200).json({ success: true, message: "Logged out successfully." });
 };
 
-// Get profile data
-export const GetProfileData = async (req, res) => {
-  const id = req.params.id;
-  try {
-    const post = await UserModel.findById({ _id: id });
-    res.json(post);
-  } catch (err) {
-    res.status(500).json(err);
-  }
-};
