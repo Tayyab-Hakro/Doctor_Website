@@ -15,10 +15,10 @@ const storage = multer.diskStorage({
   },
 });
 
-export const upload = multer({ 
+export const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    const fileTypes = /jpeg|jpg|png/; // Allow only specific file types
+    const fileTypes = /jpeg|jpg|png/;
     const extName = fileTypes.test(path.extname(file.originalname).toLowerCase());
     const mimeType = fileTypes.test(file.mimetype);
 
@@ -36,26 +36,22 @@ export const SignUp = async (req, res) => {
     const { username, email, password, address, phone } = req.body;
     const imageUploader = req.file;
 
-    // Validate required fields
     if (!username || !email || !password || !imageUploader || !address || !phone) {
       return res.status(400).json({ success: false, message: "Please fill in all fields." });
     }
 
-    // Check if the user already exists
     const existingUser = await UserModel.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ success: false, message: "User already exists." });
     }
 
-    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create a new user
     const newUser = new UserModel({
       username,
       email,
       password: hashedPassword,
-      file: imageUploader.filename, // Save file name
+      file: imageUploader.filename,
       address,
       phone,
     });
@@ -102,15 +98,16 @@ export const Login = async (req, res) => {
     res
       .status(200)
       .cookie("token", token, {
-        maxAge: 24 * 60 * 60 * 1000,
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.NODE_ENV === "production", // Ensure secure cookies in production
+        sameSite: "strict",
+        maxAge: 24 * 60 * 60 * 1000, // 1 day
       })
       .json({
         success: true,
         message: `Welcome back, ${user.username}!`,
         user: { id: user._id, username: user.username, email: user.email },
-        token, // Include the token in the response for testing
+        token, // Include token for testing
       });
   } catch (error) {
     console.error("Login error:", error);
@@ -118,25 +115,35 @@ export const Login = async (req, res) => {
   }
 };
 
-// Get profile data
 export const GetProfileData = async (req, res) => {
-  const id = req.params.id;
+  const { id } = req.params; // Extract the ID from the request parameters
+
   try {
-    const user = await UserModel.findById({ _id: id });
+    // Fetch user data from the database using the provided ID
+    const user = await User.findById(id);
+
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found." });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
-    res.json({ success: true, user });
-  } catch (err) {
-    console.error("Error fetching user profile:", err);
-    res.status(500).json({ success: false, message: "Server error." });
+
+    // Return the user data as a response
+    res.status(200).json({ success: true, user });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching user data",
+    });
   }
 };
-
-
 // User logout
 export const Logout = (req, res) => {
-  res.clearCookie("token");
-  return res.status(200).json({ success: true, message: "Logged out successfully." });
+  res
+    .clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    })
+    .status(200)
+    .json({ success: true, message: "Logged out successfully." });
 };
-

@@ -78,24 +78,14 @@ export const BookingSystem = async (req, res) => {
 
 // MyAppointments API
 export const MyAppointments = async (req, res) => {
-    try {
-      // Extract the ID from the request parameters
-      const { id } = req.params;
-  
-      // Find a single document by its _id
-      const document = await BookingModel.findOne({ _id: id });
-  
-      // If no document is found, handle the case
-      if (!document) {
-        return res.status(404).json({ message: "No appointment found with this ID" });
-      }
-  
-      // Send the found document as a response
-      res.status(200).json({ message: "Data found", data: document });
-    } catch (error) {
-      // Log and handle any errors
-      console.error("Error fetching appointment:", error);
-      res.status(500).json({ message: "An error occurred", error: error.message });
-    }
-  };
-  
+  try {
+   
+const id = req.body
+    // Fetch appointments for the given userId
+    const appointments = await BookingModel.find({ _id :id });
+    console.log(appointments)
+  }
+  catch(error){
+    console.log(error)
+  }
+}
