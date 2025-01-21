@@ -120,7 +120,7 @@ export const GetProfileData = async (req, res) => {
 
   try {
     // Fetch user data from the database using the provided ID
-    const user = await User.findById(id);
+    const user = await UserModel.findById(id);
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
