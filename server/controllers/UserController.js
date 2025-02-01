@@ -99,9 +99,6 @@ export const Login = async (req, res) => {
       .status(200)
       .cookie("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production", // Ensure secure cookies in production
-        sameSite: "strict",
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
       })
       .json({
         success: true,
@@ -114,11 +111,15 @@ export const Login = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error." });
   }
 };
-
 export const GetProfileData = async (req, res) => {
   const { id } = req.params; // Extract the ID from the request parameters
 
   try {
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid user ID" });
+    }
+
     // Fetch user data from the database using the provided ID
     const user = await UserModel.findById(id);
 
@@ -136,13 +137,11 @@ export const GetProfileData = async (req, res) => {
     });
   }
 };
-// User logout
 export const Logout = (req, res) => {
   res
     .clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
     })
     .status(200)
     .json({ success: true, message: "Logged out successfully." });
